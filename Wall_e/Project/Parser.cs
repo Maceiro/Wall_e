@@ -113,14 +113,14 @@
    
    index= 0;
    Node tree= new Node( Data.gramatik.Initial.Class, null) ;
-   if( Construct( tree, tokens ) && index==tokens.Count-1 ) return tree ;
+   if( Construct( tree, tokens ) && index==tokens.Count-1 )  return tree ;
    return null;
 
   }
 
   public static bool Construct( Node node, List<Token> tokens ) {
     
-    //Console.WriteLine( node.Symbol ) ;
+    Console.WriteLine( node.Symbol ) ;
     if( node.Is_Terminal() ) {
       
       if( node.Is_Epsilon() ) return true ;

@@ -1,9 +1,41 @@
 
+public class Arc: Figure {
+
+  public Point center;
+  public Point initial;
+  public Point final;
+  public Measure radio;
+
+  public Arc( Point center, Point initial, Point final, Measure radio ) {
+
+    this.center= center;
+    this.initial= initial;
+    this.final= final;
+    this.radio= radio;
+
+  }
+
+  public override List<Point> Get_Intersection( Figure other) {
+
+    var segment1= new Segment( center, initial);
+    var segment2= new Segment( center, final);
+    var circle= new Circle( center, radio);
+    var result= new List<Point>();
+    result.Aggregate( segment1.Get_Intersection( other));
+    result.Aggregate( segment2.Get_Intersection( other));
+    var list= circle.Get_Intersection( other);
+    Filter( list, segment1.Get_Ecuation().V, segment2.Get_Ecuation.V, center);
+    result.Aggregate( list);
+    return result;
+
+  }
+
+  public override Ecuation Get_Ecuation() { return null; }
+
+ }
 
 
-public class Operation_System  {
-
-  public static bool Validate_Program( string chain ) {
+ public static bool Validate_Program( string chain ) {
    
    if( Semantik_Analysis.AST== null ) Semantik_Analysis.AST= new Program_Node() ;
    if( Semantik_Analysis.Context== null ) {
@@ -45,40 +77,3 @@ public class Operation_System  {
     return true ;
     
   }
-
-
-  public static Tuple<Instruction, bool> Obtain_AST( string s ) {
-
-   Node node= Parser.Parsing( Lexer.Tokenization( s ) );
-    if( node== null ) return Tuple.Create<Instruction, bool>( null, false );
-    Instruction sub_tree= Semantik_Analysis.To_AST( node );
-    if( sub_tree== null )  return Tuple.Create<Instruction, bool>( null, false );
-  
-    return Tuple.Create<Instruction, bool>( sub_tree, true );
-  } 
-
-
-  public static void Interface() {
-    
-    string s= ""; 
-    do {
-
-    s= Console.ReadLine() ;
-    Validate_Program( s );
-    }
-    while( s!= "finish");
-    
-  } 
-
-   public static void Print_in_Console( object obj ) { 
-
-    if( obj is Figure ) ((Figure)obj).Print();
-    if( obj is Secuence ) ((Secuence)obj).Print();
-    Console.WriteLine( obj) ; 
-
-    
-     }
-
-
-}
-

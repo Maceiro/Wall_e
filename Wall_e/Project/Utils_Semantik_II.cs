@@ -128,6 +128,7 @@
        
     }
 
+
     public static List<object> Filter<T>( Context context, T item, bool equals, params Expression[]expr ) {
 
      var list= Filter( context, expr);
@@ -167,7 +168,7 @@
 
    public static bool Interprete( object obj ) { 
     
-    return !( ( (obj is Secuence) && ((Secuence)obj).Is_Empty() ) || ( (obj is double) && ((double)obj)==0  ) );
+    return !( obj== null || ( (obj is Secuence) && ((Secuence)obj).Is_Empty() ) || ( (obj is double) && ((double)obj)==0  ) );
     
      }
 
