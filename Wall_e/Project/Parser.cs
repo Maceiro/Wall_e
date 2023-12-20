@@ -120,7 +120,7 @@
 
   public static bool Construct( Node node, List<Token> tokens ) {
     
-    Console.WriteLine( node.Symbol ) ;
+    //Console.WriteLine( node.Symbol ) ;
     if( node.Is_Terminal() ) {
       
       if( node.Is_Epsilon() ) return true ;
@@ -134,7 +134,7 @@
     var list= table.Search( new Symbol( node.Symbol ), new Symbol( tokens[index].Class ) ) ;
     if( list== null ) {
 
-     Operation_System.Print_in_Console("Sintactic Error") ;
+     //Operation_System.Print_in_Console("Sintactic Error") ;
      return false;
     }
 
