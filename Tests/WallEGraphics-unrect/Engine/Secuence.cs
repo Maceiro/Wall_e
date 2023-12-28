@@ -1,18 +1,15 @@
  
  public abstract class Secuence: Expression {
   
-  public Context context;
   public virtual bool Finite{ get; set; }
   public virtual int Count{ get; set; }
   public abstract IEnumerator<object> GetEnumerator(); 
   public bool Is_Empty() { return Finite && Count==0; }
-  public virtual void Print() {
+  public void Print() {
      
      int cursor= 0;
-     if( Is_Empty()) Console.WriteLine("Empty");
     foreach( var item in this ) {
-      
-      if( item==null ) break;
+
       if( cursor>100) break;
       if( item is Figure ) ((Figure)item).Print();
       else Console.WriteLine( item);
@@ -20,28 +17,6 @@
     }
 
   }
-
-  public override string ToString() {
-     
-     int cursor= 0;
-     string result= "";
-    foreach( var item in this ) {
-      
-      if( item==null ) break;
-      if( cursor>100) break;
-      result+= item.ToString() + ",  ";
-     cursor++;
-    }
-
-    return result;
-
-  }
-
-  public void Put_In_Context( Context context ) {  this.context= context; }
-  public override Bool_Object Evaluate( Context Context ) { 
-
-    this.Put_In_Context( Context);
-    return new Bool_Object( true, this); }
 
 }
 
@@ -55,7 +30,6 @@ public class Collection: Secuence {
     this.elements= elements;
     Count= elements.Count;
     Finite= true;
-    context= Semantik_Analysis.Context;
 
   }
 
@@ -65,26 +39,17 @@ public class Collection: Secuence {
     elements.Add(expr);
     Count=1;
     Finite= true;
-    context= Semantik_Analysis.Context;
-
-  }
-
-  public Collection() {
-
-    this.elements= new List<Expression>();
-    Count= elements.Count;
-    Finite= true;
-    context= Semantik_Analysis.Context;
-
   }
 
   public override IEnumerator<object> GetEnumerator() {
      
+    Context context= Semantik_Analysis.Context;
     foreach( var element in elements ) 
      yield return element.Evaluate( context).Object ;
 
   }
 
+  public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this) ;  }
   
 }
 
@@ -97,8 +62,7 @@ public class Collection: Secuence {
 
     Min= min;
     Finite= false;
-    context= Semantik_Analysis.Context;
-    
+    Console.WriteLine("Creating_secuence...");
   }
 
   public virtual Sub_Z GetEnumerable( Context context) {
@@ -112,6 +76,7 @@ public class Collection: Secuence {
 
   public override IEnumerator<object> GetEnumerator() {
    
+    Context context= Semantik_Analysis.Context;
     Sub_Z set= GetEnumerable( context);
     if( set==null) yield return null;
     foreach( var item in set )
@@ -119,6 +84,7 @@ public class Collection: Secuence {
     
   }
 
+  public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this);  }
   
  }
 
@@ -132,7 +98,6 @@ public class Collection: Secuence {
     
     Max= max; 
     Finite= true;
-    context= Semantik_Analysis.Context;
 
     }
 
@@ -172,10 +137,10 @@ public class Collection: Secuence {
       
       this.type= type; 
       Finite= false;
-      context= Semantik_Analysis.Context;
 
       }
 
+     public override Bool_Object Evaluate( Context context) {  return new Bool_Object(true, this); } 
      
      public override IEnumerator<object> GetEnumerator() {
 
@@ -196,10 +161,10 @@ public class Collection: Secuence {
       source= secuence;
       ignored= count;
       Finite= source.Finite; 
-      context= Semantik_Analysis.Context;
 
      }
 
+     public override Bool_Object Evaluate( Context context) { return new Bool_Object( true, this );  }
      
      public override IEnumerator<object> GetEnumerator() {
        
@@ -224,6 +189,7 @@ public class Collection: Secuence {
 
       public override IEnumerator<object> GetEnumerator() {   while(true) yield return new Point(); }
       
+      public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this) ;  }
     }
 
 
@@ -239,6 +205,8 @@ public class Collection: Secuence {
 
       }
 
+      public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this) ;  }
+
     }
 
 
@@ -251,104 +219,28 @@ public class Collection: Secuence {
       
       Fig= fig;  
       Finite= false;
-      context= Semantik_Analysis.Context;
-
+      
       }
 
-     public override IEnumerator<object> GetEnumerator() { yield break; }
+     public override IEnumerator<object> GetEnumerator() {
+       
+       Context context= Semantik_Analysis.Context;
+       var pair= Fig.Evaluate( context);
+       if( !pair.Bool || !(pair.Object is Figure) ) yield return null;
+       Figure fig= (Figure)pair.Object;
+       var ecuation= fig.Get_Ecuation();
+       var range= fig.Get_Dom_Range();
+       var r= new Random();
+       while( true) {
+        
+        double n= (range.Left_Acotated )? ( (range.Right_Acotated )? r.Next( (int)range.Inf, (int)range.Sup) : r.Next( (int)range.Inf) ) : ( ( range.Right_Acotated )? r.Next( (int)range.Sup ) : r.Next( -100, 100) );
+        yield return new Point( n, ecuation.Obtain_Y_Value(n)[0] );
 
-    }
-
-    public class Undefined: Secuence {
-
-     public Undefined() {
-
-      Finite= true;
-      Count= 0;
+       }
 
      }
 
-     public override IEnumerator<object> GetEnumerator() { yield break; }
-     public override void Print() { Console.WriteLine("Undefined"); }
+     public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this) ;  }
 
     }
-
-
-    public class Sum_Secuence: Secuence {
-
-      public Secuence left;
-      public Secuence right;
-      public Sum_Secuence( Secuence left, Secuence right) {
-
-        this.left= left;
-        this.right= right;
-        Finite= left.Finite && right.Finite;
-
-      }
-
-      public override int Count {    get { return left.Count + right.Count ; }   }
-       
-      public override IEnumerator<object> GetEnumerator() {
-
-        foreach( var x in left )
-         yield return x;
-
-        foreach( var x in right )
-         yield return x;
-
-      } 
-
-    }
-
-    public class Intersection : Secuence {
-
-      public Expression Fig1;
-      public Expression Fig2;
-
-      public Intersection( Expression fig1, Expression fig2 ) {
-
-        Fig1= fig1;
-        Fig2= fig2;
-        context= Semantik_Analysis.Context;
-        Finite= true;
-
-      }
-
-
-      public override IEnumerator<object> GetEnumerator() {
-
-       var figures= Utils.Filter( context, Fig1, Fig2);
-       if( figures==null ) yield return null;
-       if( !(figures[0] is Figure) || !(figures[1] is Figure ) )  {
-
-       Operation_System.Print_in_Console( "A la funcion intersect solo pueden asignarsele como parametros objectos de tipo \"Figure\" ");
-       yield return null;
-
-      }
-      
-      var points= ((Figure)figures[0]).Get_Intersection( (Figure)figures[1]);
-      if( points==null) yield break;
-      foreach( var p in points) 
-       yield return p;
-
-      }
-
-      public override int Count {
-
-        get {
-
-         int count= 0;
-         foreach( var x in this )
-         if( x== null) return 0;
-         else count++;
-
-         return count;
-
-        }
-      }
-
-    }
-
-     
-
 

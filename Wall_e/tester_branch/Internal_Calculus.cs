@@ -5,6 +5,16 @@
       public static List<Point> FindLineLineIntersections(Line line1, Line line2)
     {
         List<Point> intersectionPoints = new List<Point>();
+         
+        if( line1.Ortogonal || line2.Ortogonal ) {
+
+         if( line1.Ortogonal && line2.Ortogonal ) return intersectionPoints;
+
+         if( line1.Ortogonal ) intersectionPoints.Add( new Point( line1.P1.X, line2.Slope*line1.P1.X + line2.Intercept ) );
+         else intersectionPoints.Add( new Point( line2.P1.X, line1.Slope*line2.P1.X + line1.Intercept ) );
+         return intersectionPoints;
+
+        }
 
         if (line1.Slope == line2.Slope)
         {
@@ -54,6 +64,8 @@
 
     public static List<Point> FindCircleLineIntersections(Circle circle, Line line)
     {  
+        if( line.Ortogonal ) return FindCircleLineOrtogonalIntersections( circle, line );
+
         List<Point> points= new List<Point>();
 
         double a = 1 + Math.Pow(line.Slope, 2);
@@ -84,6 +96,41 @@
         return points;
     }
 
+
+     public static List<Point> FindCircleLineOrtogonalIntersections(Circle circle, Line line) {
+
+       List<Point> points= new List<Point>();
+        
+        double a = 1;
+        double b = 2 * circle.Y * (-1);
+        double c = Math.Pow( line.P1.X, 2) - ( 2 * line.P1.X * circle.X ) + Math.Pow( circle.X, 2) + Math.Pow( circle.Y, 2) - Math.Pow(circle.Radius, 2);
+
+        double discriminant = Math.Pow(b, 2) - 4 * a * c;
+
+        if (discriminant < 0)
+        {
+            return null; // No hay intersección
+        }
+        
+        double y1 = (-b + Math.Sqrt(discriminant)) / (2 * a);
+        double x1 = line.P1.X;
+
+        if (discriminant == 0)
+        {
+            points.Add( new Point { X = x1, Y = y1 } ); // Solo hay un punto de intersección
+            return points;
+        }
+
+        double y2 = (-b - Math.Sqrt(discriminant)) / (2 * a);
+        double x2 = line.P1.X;
+
+        points.Add( new Point { X = x1, Y = y1 } ); 
+        points.Add( new Point { X = x2, Y = y2 } );
+        return points;
+
+     }
+
+
   }
 
 
@@ -105,12 +152,12 @@
       Max= int.MaxValue;
     }
 
-    public IEnumerator<int> GetEnumerator() {
+    public IEnumerator<double> GetEnumerator() {
 
       int cursor= Min;
       while( cursor<=Max) {
    
-        yield return cursor;
+        yield return (double)cursor;
         cursor++;
       }
 

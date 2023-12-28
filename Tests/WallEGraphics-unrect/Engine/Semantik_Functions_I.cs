@@ -10,8 +10,7 @@
     
     List<object> results= new List<object>() ;
     for( int i= 0; i< lines.Count; i++ ) {
-    
-    context.instruction= i;
+
     var pair= lines[i].Evaluate( context ) ;
     if( !pair.Bool )   {
       Console.WriteLine( "Semantik Problem with line {0}", i);
@@ -21,8 +20,8 @@
 
     }
 
-    for( int i= 0; i< results.Count; i++ )
-     Operation_System.Print_in_Console( results[i]) ;
+    //for( int i= 0; i< results.Count; i++ )
+     //Operation_System.Print_in_Console( results[i]) ;
 
     return new Bool_Object( true, results ) ;
 
@@ -41,39 +40,30 @@ public abstract class Instruction: Semantik_Node {
 
 public abstract class Expression: Instruction {}
 
-public abstract class IBinary: Expression {
+
+
+public class Binary_Operation: Expression {
 
  public Expression Left;
  public Expression Right;
  public string Op;
- 
- public IBinary( Expression left, string op, Expression right) {
 
-   Left= left;
-   Right= right;
-   Op= op;
-
- }
-
-}
-
-
-public class Binary_Operation: IBinary {
-
- public Binary_Operation( Expression left, string op, Expression right ) : base( left, op, right )  {
+ public Binary_Operation( Expression left, string op, Expression right ) {
     
-      Op= ( op!="-") ? op : "+"; 
+    Left= left ;
+    Op= ( op!="-") ? op : "+" ;
+    Right= right ;
 
    }
 
    public override Bool_Object Evaluate( Context context) { 
-    
+
      if( this.Is_Product() ) return this.Obtain_Value( context) ;
        var list= Utils.Filter( context, Left, Right );
        if( list==null ) new Bool_Object( false, null );
        var left= list[0];
        var right= list[1];
-       
+
       if( !left.Same_Type( right ) ) {
 
         Operation_System.Print_in_Console("Semantik Error!! : Los operandos deben de ser del mismo tipo");
@@ -86,16 +76,14 @@ public class Binary_Operation: IBinary {
         return new Bool_Object( false, null );
       }
 
-      if ( Op!="+" && (  left is string  || left is Secuence || left is Measure ) ) {
+      if ( Op!="+" && ( left is string ) ) {
 
-        Operation_System.Print_in_Console("Semantik Error!! : El unico operador aritmetico que puede utilizarse entre strings, secuences o measures es el de adicion") ;
+        Operation_System.Print_in_Console("Semantik Error!! : El unico operador aritmetico que puede utilizarse entre strings es el de suma") ;
         return new Bool_Object( false, null );
       }
-      
-      if( left is string )  return new Bool_Object( true, ( left as string).Combine_Strings( right as string, "+"  ) );
-      if( left is Secuence ) return new Bool_Object( true, ( left as Secuence).Combine_Secuences( right as Secuence ) );   
-      if( left is Measure ) return new Bool_Object( true, new Measure( left as Measure, right as Measure) );
 
+      if( left is string )  return new Bool_Object( true, ( left as string).Combine_Strings( right as string, "+"  ) ) ;
+      
       return new Bool_Object( true, Utils.Combine_Numbers( (double)left, (double)right, Op ) );
      }
 
@@ -168,7 +156,7 @@ public class Func_Call: Expression {
 
  public override Bool_Object Evaluate( Context context) {
     
-   if( Semantik_Analysis.Context.Is_Predeterm( Name, args.Count ) ) return Evaluate_Predeterm( context, Name, args ) ;
+   if( context.Is_Predeterm( Name, args.Count ) ) return Evaluate_Predeterm( context, Name, args ) ;
 
   if( !context.Is_Defined( Name, args.Count ) ) {
       
@@ -192,32 +180,6 @@ public class Func_Call: Expression {
 
      if( name=="samples") return new Bool_Object( true, new Samples());
      if( name=="randoms") return new Bool_Object( true, new Randoms());
-
-     if( name=="intersect")  { 
-      
-      var intersection= new Intersection( list[0], list[1]); 
-      intersection.Put_In_Context( context);
-      return new Bool_Object( true, intersection);
-      
-    }
-
-    if( name=="count") {
-     
-     if( list.Count==0) return new Bool_Object( false, null);
-     var obj= list[0].Evaluate( context ).Object;
-     if( obj== null ) return new Bool_Object( false, null);
-
-     if( obj is Secuence ) {
-
-      if( ((Secuence)obj).Finite ) return new Bool_Object(true, ((Secuence)obj).Count);
-      else return new Bool_Object(true, new Undefined() );
-      
-     }
-     
-      Operation_System.Print_in_Console( "Semantik_Error:  La funcion count solo recibe como parametros a secuencias");
-      return new Bool_Object( false, null);
-
-    }
 
      return new Bool_Object( false, null ) ;
 
@@ -265,6 +227,7 @@ public class Let_In: Expression {
 
    this.Instructions= instructions;
    Body= body;
+   Console.WriteLine("Creating_let_in");
    
    }
 
@@ -273,102 +236,13 @@ public class Let_In: Expression {
     Context chield= context.Create_Chield();
    
     for( int i= 0; i< Instructions.Count; i++)
-     if( !Instructions[i].Evaluate( chield).Bool ) {
-      
-      Console.WriteLine("Se evaluo mal la instrucion {0} del let", i);
-      return new Bool_Object( false, null ) ;
-     }
+     if( !Instructions[i].Evaluate( chield).Bool ) return new Bool_Object( false, null ) ;
 
-     return Body.Evaluate( chield ) ; 
-   
+    return Body.Evaluate( chield ) ;  
+    
     }
    
   }
-
-
-
-   public class Condition: Expression {
-    
-    public Expression Left ;
-    public Expression Right ;
-    string Op;
-    
-
-    public Condition( Expression left, string op, Expression right ) {
-     
-     Left= left ;
-     Right= right ;
-     Op= op;
-
-    }
-
-    public Condition( string op, Expression left )  {  
-      
-      Left= left ;
-      Right= null ; 
-      Op= op;
-     }
-
-
-    public override Bool_Object Evaluate( Context context ) {  
-      
-      var list= Utils.Filter<double>( context, 5.6, true, Left, Right );
-      if( list== null) return new Bool_Object( false, null);
-
-      return Utils.Combine_Condition( (double)list[0], (double)list[1], Op );
-    
-   }
-
-   }
-
-
-
-   public class Boolean_Operation: IBinary {
-
-    public Boolean_Operation( Expression left, string op, Expression right ) : base( left, op, right) {}
-
-    public override Bool_Object Evaluate( Context context) {
-
-     var t= Utils.Obtain_Values( context, this );
-     if( t.Item1==null) return new Bool_Object( false, null);
-     var results= t.Item1;
-     var operators= t.Item2;
-
-     double result= Obtain_Result_Boolean( context, results, operators, 0, 0);
-     return new Bool_Object( true, result);
-
-    }
-
-
-   public static double Obtain_Result_Boolean( Context context, List<object> results, List<string> operators, int index_result, int index_op ) {
-   
-    double left= 0;
-    double right= 0;
-    int actual= index_result;
-    int op= index_op; 
-
-    if( op<operators.Count && operators[op]=="==") {
-
-      left= Utils.Compare( results[actual], results[actual+1] );
-      actual++;
-      op++;
-
-    }
-    
-   else left= ( results[actual].Interprete() ) ? 1 : 0;
-   
-   if( actual== results.Count-1 ) return left;
-
-    right= Obtain_Result_Boolean( context, results, operators, actual+1, op+1);
-   // Console.WriteLine( "Left : {0}, Right : {1}", left, right );
-   return Utils.Combine_Boolean( left, right, operators[op]);
-
-   }
-
-    
-   }
-
-
 
 
 

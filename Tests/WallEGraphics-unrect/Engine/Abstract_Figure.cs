@@ -34,7 +34,7 @@ public abstract class Abstract_Figure: Expression {
       public Abstract_Line( List<Expression> components, string especification) : base( components) {
 
         Especification= especification;
-      
+        Console.WriteLine("Creating_line");
       }
 
       public override Bool_Object Evaluate( Context context) {
@@ -58,9 +58,7 @@ public abstract class Abstract_Figure: Expression {
        if( Components.Count!=2 ) return new Bool_Object( false, null);
        double aux= 5;
        var list= Utils.Filter<double>( context, aux, true, Components[0], Components[1] );
-       
        if( list==null) return new Bool_Object( false, null);
-       
        return new Bool_Object( true, new Point( (double)list[0], (double)list[1] ) );
 
       }  
@@ -92,9 +90,9 @@ public abstract class Abstract_Figure: Expression {
      public override Bool_Object Evaluate( Context context) {
 
        if( Components.Count!=4 ) return new Bool_Object( false, null);
-       var list= Utils.Filter<Point>( context, new Point(), true, Components[0], Components[1], Components[2] );
+       var list= Utils.Filter( context, new Point(), true, Components[0], Components[1], Components[2] );
        if( list==null) return new Bool_Object( false, null);
-       var pair= Components[3].Evaluate( context);
+       var pair= Components[4].Evaluate( context);
        if( !pair.Bool || !(pair.Object is Measure) ) new Bool_Object( false, null);
 
        return new Bool_Object( true, new Arc( (Point)list[0], (Point)list[1], (Point)list[2], (Measure)pair.Object ) );
@@ -103,34 +101,35 @@ public abstract class Abstract_Figure: Expression {
  
     }
 
-    public class Abstract_Print : No_Computable  {
 
-     public Expression Expr;
-     public string Coment { get; set; }
 
-     public Abstract_Print( Expression expr ) { Expr= expr; Console.WriteLine("Creating_Abstract_Print"); }
-     public Abstract_Print( Expression expr, String coment ) { 
-      
-      Expr= expr; 
-      Coment= coment.Value;
+     public class Intersection: Secuence {
 
-     }
+       public Expression Figure1;
+       public Expression Figure2;
 
-     public override Bool_Object Evaluate( Context context ) {
+       public Intersection( Expression fig1, Expression fig2) {
 
-       var obj= Expr.Evaluate( context).Object;
-       if( obj== null ) return new Bool_Object( false, null);
-       
-      if( Coment== null)  context.Add_Figure( new Printer( obj.ToString()) );
-      else context.Add_Figure( new Printer( obj.ToString(), Coment ) );
+         Figure1= fig1;
+         Figure2= fig2;
 
-      return new Bool_Object( true, null);
-       
-     }
+       }
 
+       public override Bool_Object Evaluate( Context context ) { return new Bool_Object(true, this) ;  }
+
+       public override IEnumerator<object> GetEnumerator() {
+         
+         Context context= Semantik_Analysis.Context;
+         var list= Utils.Filter( context, Figure1, Figure2);
+         if( list==null || !(list[0] is Figure ) || !(list[1] is Figure) ) yield return null;
+         var intersection= ((Figure)list[0]).Get_Intersection( (Figure)list[1] );
+         if( intersection== null) yield return null;
+
+         foreach( var point in intersection ) {
+            yield return point;
+         }
+
+       }
 
     }
-
-
-
-    
+ 

@@ -8,6 +8,7 @@
     public abstract void Print();
     public string color;
     public void Assign_Color( string color) {  this.color= color; }
+    public string Coment { get; set; }
 
    }
 
@@ -37,7 +38,13 @@
 
        Console.WriteLine( "Point : X={0}, Y={1}", X, Y);
        Console.WriteLine( "color: {0}", color);
+       Console.WriteLine( "coment: {0}", Coment);
 
+      }
+
+      public override string ToString() {
+
+        return string.Format( "point({0}, {1})", X, Y );
       }
 
      public double Distance( Point other ) {  
@@ -56,6 +63,7 @@
         public double Intercept { get; set; }
         public Point P1 { get; set; }
         public Point P2 { get; set; }
+        public bool Ortogonal { get; set; }
 
 
         public Line(double slope, double intercept)
@@ -66,25 +74,37 @@
 
         public Line( Point p1, Point p2) {
 
-         double slope; 
-         double intercept;
-         FindSlopeAndIntercept( p1, p2, out slope, out intercept );
-         Slope= slope;
-         Intercept= intercept;
          P1= p1;
          P2= p2;
+         
+         if( P1.X== P2.X) Ortogonal= true;
+         else {
 
+          double slope; 
+          double intercept;
+          FindSlopeAndIntercept( p1, p2, out slope, out intercept );
+          Slope= slope;
+          Intercept= intercept;
+
+         }
+         
         }
 
         public Line() {
 
           P1= new Point();
           P2= new Point();
-          double slope; 
-          double intercept;
-          FindSlopeAndIntercept( P1, P2, out slope, out intercept );
-          Slope= slope;
-          Intercept= intercept;
+          
+          if( P1.X== P2.X) Ortogonal= true;
+          else {
+          
+           double slope; 
+           double intercept;
+           FindSlopeAndIntercept( P1, P2, out slope, out intercept );
+           Slope= slope;
+           Intercept= intercept;
+
+          }
 
         }
 
@@ -94,11 +114,13 @@
          P1.Print();
          P2.Print();
          Console.WriteLine( "color: {0}", color);
+         Console.WriteLine( "coment: {0}", Coment);
+
          Console.Write("\n");
 
        }
 
-
+       
       public static void FindSlopeAndIntercept(Point point1, Point point2, out double slope, out double intercept)
       {
          if (point1.X == point2.X)
@@ -165,8 +187,11 @@
        center.Print();
        Console.WriteLine( "radio : {0}", radio.Get_Distance() );
        Console.WriteLine( "color: {0}", color);
+       Console.WriteLine( "coment: {0}", Coment);
 
       }
+
+      public override string ToString() { return string.Format( "Circle => Center: {0}  Radio: {1} ", center.ToString(), radio.ToString() ); }
 
     }
 
@@ -175,11 +200,15 @@
 
   public Point p1;
   public Point p2;
+  public bool Sum { get; private set; }
+  public Measure Left;
+  public Measure Right;
 
   public Measure( Point p1, Point p2) {
 
     this.p1= p1;
     this.p2= p2;
+    Sum= false;
     
   }
 
@@ -187,13 +216,28 @@
 
     p1= new Point();
     p2= new Point();
+    Sum= false;
 
   }
 
-  public double Get_Distance() { return p1.Distance(p2); }
+  public Measure( Measure left, Measure right ) {
+
+    Left= left;
+    Right= right;
+    Sum= true;
+
+  }
+
+  public double Get_Distance() { 
+    
+    if( Sum ) return Left.Get_Distance() + Right.Get_Distance();
+    return p1.Distance(p2); 
+    
+   }
 
   public override List<Point> Get_Intersection( Figure fig ) { return null; }
   public override void Print() { Console.WriteLine( Get_Distance()); }
+  public override string ToString() { return string.Format( "Measure => {0}", Get_Distance() ); }
 
  }
 
@@ -232,11 +276,14 @@
          final.Print();
          Console.WriteLine( "radio : {0}", radio.Get_Distance() );
          Console.WriteLine( "color: {0}", color);
+         Console.WriteLine( "coment: {0}", Coment);
+
          Console.Write("\n");
 
         }
 
     public override List<Point> Get_Intersection( Figure other ) {  return null; } 
+    public override string ToString() { return string.Format( "Arc => Center: {0}  P1: {1}  P2: {2}  Radio: {3}", center.ToString(), initial.ToString(), final.ToString(), radio.ToString() ); }
 
   }
 
@@ -246,6 +293,8 @@
 
    public Rect( Point p1, Point p2) : base(p1, p2 ) {}
    public Rect() : base() {}
+
+   public override string ToString() { return string.Format( "Rect => P1: {0}  P2: {1} ", P1.ToString(), P2.ToString() ); }
 
  }
 
@@ -272,6 +321,8 @@
 
     }
 
+    public override string ToString() { return string.Format( "Segment => P1: {0}  P2: {1} ", P1.ToString(), P2.ToString() ); }
+
   }
 
 
@@ -296,7 +347,33 @@
 
    }
 
+   public override string ToString() { return string.Format( "Ray => P1: {0}  P2: {1} ", P1.ToString(), P2.ToString() ); }
+
  }
+
+
+  public class Printer : Figure {
+ 
+   public string Value { get; private set; } 
+
+   public Printer( string v, string coment ) {
+
+    Value= v;
+    Coment= coment;
+
+   }
+
+  public Printer( string v )   { Value= v; }
+  public override List<Point> Get_Intersection( Figure other) { return null; }
+  public override void Print() { 
+    
+    Console.WriteLine( "Printer" );
+    Console.WriteLine( "Result : {0}", Value );
+    Console.WriteLine( "Coment : {0}", Coment );
+
+   }
+
+  }
 
  
 
